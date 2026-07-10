@@ -5,6 +5,7 @@ import { Weight, WeightUnit } from '@/models/weight';
 import {
   GranularStatisticView,
   HeaviestLift,
+  NumericStatisticOverTime,
   OptionalStatisticOverTime,
   RepsBreakdownStatistics,
   TimeTrackedStatistic,
@@ -107,6 +108,7 @@ export function calculateStats(
     maxWeightStatistics: TimeTrackedStatistic<Weight>[];
     max1RMStatistics: TimeTrackedStatistic<Weight>[];
     totalVolumeStatistics: TimeTrackedStatistic<Weight>[];
+    maxPowerStatistics: TimeTrackedStatistic<number>[];
     repsStatistics: RepsBreakdownStatistics;
     latestTime: OffsetDateTime;
   }
@@ -132,6 +134,7 @@ export function calculateStats(
           max1RMStatistics: [],
           repsStatistics: { breakdown: {} },
           totalVolumeStatistics: [],
+          maxPowerStatistics: [],
           latestTime: OffsetDateTime.MIN,
         });
       }
@@ -187,6 +190,13 @@ export function calculateStats(
           .filter((x) => x.set)
           .reduce((accum, set) => set.weight.multipliedBy(set.set!.repsCompleted).plus(accum), Weight.NIL),
       });
+      const maxPower = ex.maxPower;
+      if (maxPower !== undefined) {
+        exerciseStats.maxPowerStatistics.push({
+          dateTime: lastSet.set!.completionDateTime,
+          value: maxPower,
+        });
+      }
     }
   }
 
@@ -200,6 +210,9 @@ export function calculateStats(
       maxLiftedPerSessionStatistics,
       max1RMPerSessionStatistics,
       totalVolumeStatistics: unsortedStatsToWeightedStatisticOverTime(ex.totalVolumeStatistics),
+      maxPowerPerSessionStatistics: ex.maxPowerStatistics.length
+        ? unsortedStatsToNumericStatisticOverTime(ex.maxPowerStatistics)
+        : undefined,
       repsStatistics: ex.repsStatistics,
     } satisfies WeightedExerciseStatistics;
   });
@@ -299,5 +312,20 @@ function unsortedStatsToWeightedStatisticOverTime(
     totalValue: total,
     maxValue: max,
     minValue: min,
+  };
+}
+
+function unsortedStatsToNumericStatisticOverTime(
+  unsortedStats: TimeTrackedStatistic<number>[],
+): NumericStatisticOverTime {
+  const statistics = Enumerable.from(unsortedStats)
+    .orderBy((x) => x.dateTime.toString())
+    .toArray();
+  const values = statistics.map((x) => x.value);
+  return {
+    statistics,
+    currentValue: values.at(-1) ?? 0,
+    maxValue: values.length ? Math.max(...values) : 0,
+    minValue: values.length ? Math.min(...values) : 0,
   };
 }
