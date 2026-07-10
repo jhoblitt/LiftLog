@@ -491,10 +491,11 @@ export class WeightedExerciseBlueprint {
     readonly supersetWithNext: boolean,
     readonly notes: string,
     readonly link: string,
+    readonly trackPower: boolean = false,
   ) {}
 
   static empty() {
-    return new WeightedExerciseBlueprint('', 3, 10, new NoProgressiveOverload(), Rest.medium, false, '', '');
+    return new WeightedExerciseBlueprint('', 3, 10, new NoProgressiveOverload(), Rest.medium, false, '', '', false);
   }
 
   static fromJSON(json: WeightedExerciseBlueprintJSON): WeightedExerciseBlueprint {
@@ -507,6 +508,7 @@ export class WeightedExerciseBlueprint {
       json.supersetWithNext,
       json.notes,
       json.link,
+      json.trackPower ?? false,
     );
   }
 
@@ -531,7 +533,8 @@ export class WeightedExerciseBlueprint {
       this.restBetweenSets.failureRest.equals(other.restBetweenSets.failureRest) &&
       this.supersetWithNext === other.supersetWithNext &&
       this.notes === other.notes &&
-      this.link === other.link
+      this.link === other.link &&
+      this.trackPower === other.trackPower
     );
   }
 
@@ -546,6 +549,7 @@ export class WeightedExerciseBlueprint {
       supersetWithNext: this.supersetWithNext,
       notes: this.notes,
       link: this.link,
+      trackPower: this.trackPower,
     };
   }
 
@@ -559,6 +563,7 @@ export class WeightedExerciseBlueprint {
       other.supersetWithNext ?? this.supersetWithNext,
       other.notes ?? this.notes,
       other.link ?? this.link,
+      other.trackPower ?? this.trackPower,
     );
   }
 }
