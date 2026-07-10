@@ -276,6 +276,7 @@
   "plan.diff.track_distance.label": "Distance",
   "plan.diff.track_duration.label": "Duration",
   "plan.diff.track_incline.label": "Incline",
+  "plan.diff.track_power.label": "Power",
   "plan.diff.track_resistance.label": "Resistance",
   "plan.diff.generic_updated.body": "Updated",
   "plan.diff.generic_disabled.body": "Disabled",
