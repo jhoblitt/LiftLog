@@ -357,12 +357,12 @@ describe('RecordedWeightedExercise power operations', () => {
     const exercise = new RecordedWeightedExercise(
       makeWeightedBlueprint(),
       [
-        filledPotentialSet(10, t3, undefined, 400),
-        filledPotentialSet(10, t1, undefined, 250),
+        filledPotentialSet(10, t3, undefined, 300),
+        filledPotentialSet(10, t1, undefined, 400),
         filledPotentialSet(10, t2, undefined, 312),
       ],
       undefined,
     );
-    expect(exercise.latestRecordedPower).toBe(400);
+    expect(exercise.latestRecordedPower).toBe(300);
   });
 });
