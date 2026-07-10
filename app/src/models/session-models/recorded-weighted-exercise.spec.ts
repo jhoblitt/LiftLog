@@ -274,3 +274,85 @@ describe('RecordedSet.power', () => {
     expect(a.equals(new RecordedSet(10, time))).toBe(false);
   });
 });
+
+describe('RecordedWeightedExercise power operations', () => {
+  function makeExercise() {
+    return new RecordedWeightedExercise(
+      makeWeightedBlueprint(),
+      [
+        filledPotentialSet(10, tick(), undefined, 250),
+        filledPotentialSet(10, tick(), undefined, 312),
+        new PotentialSet(undefined, new Weight(100, 'kilograms')),
+      ],
+      undefined,
+    );
+  }
+
+  it('withPower sets power on a completed set', () => {
+    const result = makeExercise().withPower(0, 400);
+    expect(result.getSet(0).set?.power).toBe(400);
+    expect(result.getSet(1).set?.power).toBe(312);
+  });
+
+  it('withPower(undefined) clears power', () => {
+    expect(makeExercise().withPower(1, undefined).getSet(1).set?.power).toBeUndefined();
+  });
+
+  it('withPower is a no-op on an uncompleted set', () => {
+    const exercise = makeExercise();
+    const result = exercise.withPower(2, 400);
+    expect(result.getSet(2).set).toBeUndefined();
+    expect(result.equals(exercise)).toBe(true);
+  });
+
+  it('withRepCount preserves existing power when editing reps', () => {
+    const result = makeExercise().withRepCount(1, 8, tick());
+    expect(result.getSet(1).set?.repsCompleted).toBe(8);
+    expect(result.getSet(1).set?.power).toBe(312);
+  });
+
+  it('withRepCount(undefined) clears the whole set including power', () => {
+    expect(makeExercise().withRepCount(1, undefined, tick()).getSet(1).set).toBeUndefined();
+  });
+
+  it('withCycledRepCount decrement preserves power', () => {
+    const result = makeExercise().withCycledRepCount(1, tick());
+    expect(result.getSet(1).set?.repsCompleted).toBe(9);
+    expect(result.getSet(1).set?.power).toBe(312);
+  });
+
+  it('withNothingCompleted drops power with the set', () => {
+    const result = makeExercise().withNothingCompleted();
+    expect(result.potentialSets.every((x) => x.set === undefined)).toBe(true);
+  });
+
+  it('maxPower returns the max across sets, or undefined when none recorded', () => {
+    expect(makeExercise().maxPower).toBe(312);
+    const noPower = new RecordedWeightedExercise(
+      makeWeightedBlueprint(),
+      [filledPotentialSet(10, tick())],
+      undefined,
+    );
+    expect(noPower.maxPower).toBeUndefined();
+  });
+
+  it('latestRecordedPower returns the power of the most recently completed set that has one', () => {
+    const exercise = new RecordedWeightedExercise(
+      makeWeightedBlueprint(),
+      [
+        filledPotentialSet(10, tick(), undefined, 250),
+        filledPotentialSet(10, tick(), undefined, 312),
+        filledPotentialSet(10, tick()),
+      ],
+      undefined,
+    );
+    expect(exercise.latestRecordedPower).toBe(312);
+    expect(makeExercise().withPower(1, undefined).latestRecordedPower).toBe(250);
+    const noPower = new RecordedWeightedExercise(
+      makeWeightedBlueprint(),
+      [filledPotentialSet(10, tick())],
+      undefined,
+    );
+    expect(noPower.latestRecordedPower).toBeUndefined();
+  });
+});

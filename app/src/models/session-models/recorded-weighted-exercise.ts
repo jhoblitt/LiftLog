@@ -107,7 +107,7 @@ export class RecordedWeightedExercise {
   withRepCount(setIndex: number, reps: number | undefined, time: OffsetDateTime): RecordedWeightedExercise {
     return this.withSet(setIndex, (s) =>
       s.with({
-        set: reps === undefined ? undefined : new RecordedSet(reps, time),
+        set: reps === undefined ? undefined : new RecordedSet(reps, time, s.set?.power),
       }),
     );
   }
@@ -136,6 +136,10 @@ export class RecordedWeightedExercise {
       .exhaustive();
   }
 
+  withPower(setIndex: number, power: number | undefined): RecordedWeightedExercise {
+    return this.withSet(setIndex, (s) => (s.set ? s.with({ set: s.set.with({ power }) }) : s));
+  }
+
   toJSON(): RecordedWeightedExerciseJSON {
     return {
       type: 'RecordedWeightedExercise',
@@ -154,6 +158,18 @@ export class RecordedWeightedExercise {
         undefined as Weight | undefined,
       ) ?? new Weight(0, 'kilograms')
     );
+  }
+
+  get maxPower(): number | undefined {
+    const powers = this.potentialSets.map((x) => x.set?.power).filter((x): x is number => x !== undefined);
+    return powers.length ? Math.max(...powers) : undefined;
+  }
+
+  get latestRecordedPower(): number | undefined {
+    return Enumerable.from(this.potentialSets)
+      .where((x) => x.set?.power !== undefined)
+      .orderByDescending((x) => x.set?.completionDateTime, TemporalComparer)
+      .firstOrDefault()?.set?.power;
   }
 
   get totalWeightLifted(): Weight {
