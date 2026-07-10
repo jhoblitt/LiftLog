@@ -62,8 +62,14 @@ export default function WeightedExercise(props: WeightedExerciseProps) {
               }
             }}
             previousRepCount={props.previousRecordedExercises.at(0)?.potentialSets[index]?.set?.repsCompleted}
-            onUpdateReps={(reps) => {
-              updateExercise((ex) => ex.withRepCount(index, reps, timeProvider()));
+            onUpdateReps={(reps, power) => {
+              updateExercise((ex) => {
+                let next = ex.withRepCount(index, reps, timeProvider());
+                if (trackPower) {
+                  next = next.withPower(index, reps === undefined ? undefined : power);
+                }
+                return next;
+              });
               resetSetTimer();
             }}
             onUpdateWeight={(w, applyTo) => updateExercise((ex) => ex.withWeight(index, w, applyTo))}

@@ -25,7 +25,7 @@ interface PotentialSetCounterProps {
 
   onTap: () => void;
   onUpdateWeight: (weight: Weight, applyTo: WeightAppliesTo) => void;
-  onUpdateReps: (reps: number | undefined) => void;
+  onUpdateReps: (reps: number | undefined, power: number | undefined) => void;
 }
 
 export default function PotentialSetCounter(props: PotentialSetCounterProps) {
@@ -205,7 +205,8 @@ export default function PotentialSetCounter(props: PotentialSetCounterProps) {
         open={isRepsDialogOpen}
         repTarget={props.maxReps}
         set={props.set}
-        updateRepCount={(reps) => props.onUpdateReps(reps)}
+        showPower={props.trackPower}
+        updateRepCount={(reps, power) => props.onUpdateReps(reps, power)}
         close={() => setIsRepsDialogOpen(false)}
       />
     </Holdable>

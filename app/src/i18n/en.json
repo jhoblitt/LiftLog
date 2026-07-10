@@ -1,6 +1,7 @@
 {
   "ai.planner.subtitle": "Use AI to generate an entire program suited to your goals",
   "ai.planner.title": "AI Planner",
+  "exercise.power.label": "Power",
   "exercise.progressive_overload.label": "Progressive Overload",
   "ai.restart_chat.button": "Restart chat",
   "ai.share_program.button": "Share a program",
