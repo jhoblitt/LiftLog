@@ -217,6 +217,7 @@ function DummySet(props: { maxReps: number; set: PotentialSet }) {
       previousRepCount={undefined}
       set={props.set}
       toStartNext={false}
+      trackPower={false}
       weightIncrement={BigNumber(0)}
     />
   );

@@ -21,6 +21,7 @@ interface PotentialSetCounterProps {
   previousRepCount: number | undefined;
   toStartNext: boolean;
   isReadonly: boolean;
+  trackPower: boolean;
 
   onTap: () => void;
   onUpdateWeight: (weight: Weight, applyTo: WeightAppliesTo) => void;
@@ -145,6 +146,14 @@ export default function PotentialSetCounter(props: PotentialSetCounterProps) {
                 <WeightFormat weight={props.set.weight} />
               </Text>
             </TouchableRipple>
+            {props.trackPower && (
+              <Text
+                testID="repcount-power"
+                style={{ color: colors.onSurface, textAlign: 'center', ...font['text-sm'] }}
+              >
+                {props.set.set?.power !== undefined ? `${props.set.set.power} W` : '– W'}
+              </Text>
+            )}
           </View>
           <WeightDialog
             open={isWeightDialogOpen}
