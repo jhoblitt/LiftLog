@@ -240,3 +240,37 @@ describe('RecordedWeightedExercise JSON', () => {
     expect(filled.equals(empty)).toBe(false);
   });
 });
+
+describe('RecordedSet.power', () => {
+  it('defaults power to undefined', () => {
+    expect(new RecordedSet(10, tick()).power).toBeUndefined();
+  });
+
+  it('stores power and handles it in with()', () => {
+    const set = new RecordedSet(10, tick(), 312);
+    expect(set.power).toBe(312);
+    expect(set.with({ repsCompleted: 9 }).power).toBe(312);
+    expect(set.with({ power: 400 }).power).toBe(400);
+    expect(set.with({ power: undefined }).power).toBeUndefined();
+  });
+
+  it('round-trips power through JSON and defaults to undefined when absent', () => {
+    const time = tick();
+    const withPower = new RecordedSet(8, time, 250);
+    const roundTripped = RecordedSet.fromJSON(withPower.toJSON());
+    expect(roundTripped.equals(withPower)).toBe(true);
+    expect(roundTripped.power).toBe(250);
+
+    const withoutPower = new RecordedSet(8, time);
+    expect(withoutPower.toJSON().power).toBeUndefined();
+    expect(RecordedSet.fromJSON(withoutPower.toJSON()).power).toBeUndefined();
+  });
+
+  it('includes power in equality', () => {
+    const time = tick();
+    const a = new RecordedSet(10, time, 312);
+    expect(a.equals(new RecordedSet(10, time, 312))).toBe(true);
+    expect(a.equals(new RecordedSet(10, time, 300))).toBe(false);
+    expect(a.equals(new RecordedSet(10, time))).toBe(false);
+  });
+});

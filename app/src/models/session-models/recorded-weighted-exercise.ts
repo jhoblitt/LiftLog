@@ -213,10 +213,11 @@ export class RecordedSet {
   constructor(
     readonly repsCompleted: number,
     readonly completionDateTime: OffsetDateTime,
+    readonly power: number | undefined = undefined,
   ) {}
 
   static fromJSON(json: RecordedSetJSON): RecordedSet {
-    return new RecordedSet(json.repsCompleted, fromOffsetDateTimeJSON(json.completionDateTime));
+    return new RecordedSet(json.repsCompleted, fromOffsetDateTimeJSON(json.completionDateTime), json.power);
   }
 
   equals(other: RecordedSet | undefined): boolean {
@@ -226,13 +227,18 @@ export class RecordedSet {
     if (other === this) {
       return true;
     }
-    return this.repsCompleted === other.repsCompleted && this.completionDateTime.equals(other.completionDateTime);
+    return (
+      this.repsCompleted === other.repsCompleted &&
+      this.completionDateTime.equals(other.completionDateTime) &&
+      this.power === other.power
+    );
   }
 
   with(other: Partial<RecordedSet>): RecordedSet {
     return new RecordedSet(
       'repsCompleted' in other ? other.repsCompleted! : this.repsCompleted,
       'completionDateTime' in other ? other.completionDateTime! : this.completionDateTime,
+      'power' in other ? other.power : this.power,
     );
   }
 
@@ -240,6 +246,7 @@ export class RecordedSet {
     return {
       repsCompleted: this.repsCompleted,
       completionDateTime: toOffsetDateTimeJSON(this.completionDateTime),
+      power: this.power,
     };
   }
 }
