@@ -381,6 +381,7 @@
   "stats.stats.title": "Stats",
   "stats.exercise.overview.title": "Overview",
   "stats.exercise.max_weight.title": "Max Weight",
+  "stats.exercise.max_power.title": "Max Power",
   "stats.exercise.1rm_progress.title": "1RM",
   "stats.exercise.volume_per_workout.title": "Volume Per Workout",
   "stats.exercise.current_weight.label": "Current weight",

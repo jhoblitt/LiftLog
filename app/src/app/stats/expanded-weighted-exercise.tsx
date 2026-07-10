@@ -7,6 +7,7 @@ import { TimePeriodSelector } from '@/components/presentation/stats/time-period-
 import { TitledSection } from '@/components/presentation/stats/titled-section';
 import { WeightBarChart } from '@/components/presentation/stats/weight-bar-chart';
 import { WeightLineChart } from '@/components/presentation/stats/weight-line-chart';
+import { PowerLineChart } from '@/components/presentation/stats/power-line-chart';
 import { spacing, useAppTheme } from '@/hooks/useAppTheme';
 import { useAppSelector, useAppSelectorWithArg } from '@/store';
 import { fetchOverallStats, selectExerciseView, setOverallViewTime, WeightedExerciseStatistics } from '@/store/stats';
@@ -65,6 +66,11 @@ function LoadedStatsFilled({ stats }: { stats: WeightedExerciseStatistics }) {
       <StatCardWithTitle title={t('stats.exercise.max_weight.title')}>
         <WeightLineChart statistics={stats.maxLiftedPerSessionStatistics} />
       </StatCardWithTitle>
+      {stats.maxPowerPerSessionStatistics && (
+        <StatCardWithTitle title={t('stats.exercise.max_power.title')}>
+          <PowerLineChart statistics={stats.maxPowerPerSessionStatistics} />
+        </StatCardWithTitle>
+      )}
       <StatCardWithTitle title={t('stats.exercise.1rm_progress.title')}>
         <WeightLineChart statistics={stats.max1RMPerSessionStatistics} />
       </StatCardWithTitle>
