@@ -294,8 +294,10 @@ describe('RecordedWeightedExercise power operations', () => {
     expect(result.getSet(1).set?.power).toBe(312);
   });
 
-  it('withPower(undefined) clears power', () => {
-    expect(makeExercise().withPower(1, undefined).getSet(1).set?.power).toBeUndefined();
+  it('withPower(undefined) clears power but keeps the completed set', () => {
+    const result = makeExercise().withPower(1, undefined);
+    expect(result.getSet(1).set?.power).toBeUndefined();
+    expect(result.getSet(1).set?.repsCompleted).toBe(10);
   });
 
   it('withPower is a no-op on an uncompleted set', () => {
@@ -354,5 +356,21 @@ describe('RecordedWeightedExercise power operations', () => {
       undefined,
     );
     expect(noPower.latestRecordedPower).toBeUndefined();
+  });
+
+  it('latestRecordedPower uses completion time, not array order', () => {
+    const t1 = tick();
+    const t2 = tick();
+    const t3 = tick();
+    const exercise = new RecordedWeightedExercise(
+      makeWeightedBlueprint(),
+      [
+        filledPotentialSet(10, t3, undefined, 400),
+        filledPotentialSet(10, t1, undefined, 250),
+        filledPotentialSet(10, t2, undefined, 312),
+      ],
+      undefined,
+    );
+    expect(exercise.latestRecordedPower).toBe(400);
   });
 });
