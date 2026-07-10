@@ -229,7 +229,7 @@ export class RecordedSet {
   constructor(
     readonly repsCompleted: number,
     readonly completionDateTime: OffsetDateTime,
-    readonly power: number | undefined = undefined,
+    readonly power?: number,
   ) {}
 
   static fromJSON(json: RecordedSetJSON): RecordedSet {
