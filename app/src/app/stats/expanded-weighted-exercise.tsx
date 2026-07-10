@@ -1,5 +1,6 @@
 import FullHeightScrollView from '@/components/layout/full-height-scroll-view';
 import { Remote } from '@/components/presentation/foundation/remote';
+import { PowerLineChart } from '@/components/presentation/stats/power-line-chart';
 import { RepsBarChart } from '@/components/presentation/stats/reps-bar-chart';
 import SingleValueStatisticCard from '@/components/presentation/stats/single-value-statistic-card';
 import { SingleValueStatisticsGrid } from '@/components/presentation/stats/single-value-statistics-grid';
@@ -7,7 +8,6 @@ import { TimePeriodSelector } from '@/components/presentation/stats/time-period-
 import { TitledSection } from '@/components/presentation/stats/titled-section';
 import { WeightBarChart } from '@/components/presentation/stats/weight-bar-chart';
 import { WeightLineChart } from '@/components/presentation/stats/weight-line-chart';
-import { PowerLineChart } from '@/components/presentation/stats/power-line-chart';
 import { spacing, useAppTheme } from '@/hooks/useAppTheme';
 import { useAppSelector, useAppSelectorWithArg } from '@/store';
 import { fetchOverallStats, selectExerciseView, setOverallViewTime, WeightedExerciseStatistics } from '@/store/stats';
