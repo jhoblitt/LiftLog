@@ -50,9 +50,22 @@ distorts total-weight-lifted stats and clutters graphs.
   `false` (`?? false` in `fromJSON`, `false` in `empty()`; included in
   `equals`/`with`/`toJSON`).
 - **No storage migration, no version bump.** Both fields are optional; old data
-  loads untouched; older clients ignore the fields in feed/backup JSON. The
-  backend needs no changes (feed payloads are client-side-encrypted blobs; no
-  recorded-session model exists in C#).
+  loads untouched. The backend needs no changes (feed payloads are
+  client-side-encrypted blobs; no recorded-session model exists in C#).
+- **Cross-version semantics (stated honestly):** older app versions *read*
+  newer data fine (unknown JSON fields are dropped at `fromJSON`), but any
+  older-client *rewrite* — restoring a newer backup on an old version and then
+  saving, running a downgraded app against a newer DB, or a follower's device
+  re-persisting a received feed session — silently drops `power`/`trackPower`
+  from its local copy. This cannot be prevented from this PR: shipped clients
+  have no unknown-version rejection (`migrateUntil` passes
+  newer-than-known versions through unchanged) and no unknown-field
+  preservation, so neither a version bump nor lossless round-tripping would
+  protect against them retroactively. It is also the app's established
+  behavior for every additive schema change (cardio exercises and their
+  optional per-set fields, e.g. `steps`, were added within version 2 the same
+  way). The upstream discussion post must call this caveat out explicitly so
+  the maintainer can impose a different policy if desired.
 - Rep-editing paths must preserve power:
   - `withCycledRepCount` decrement goes through `RecordedSet.with()` — safe
     once `with` carries power.
@@ -78,12 +91,22 @@ distorts total-weight-lifted stats and clutters graphs.
 - Taps that cycle the rep count down or un-complete the set never re-open the
   dialog.
 
-## 3. Editing after the fact
+## 3. Editing after the fact (and the second completion path)
 
 - `PotentialSetAdditionalActionsDialog` (long-press on a set) gains a power
-  section when `trackPower`: watts input pre-filled with the recorded value,
-  clearable to unset. Enabled only when the set is completed. This is also how
-  power is added to a set whose popup was skipped.
+  section when `trackPower`: a watts input pre-filled with the recorded value,
+  clearable to unset. This is also how power is added to a set whose popup was
+  skipped.
+- The input is always shown for power-tracked exercises — **not** gated on the
+  set already being completed — because this dialog is itself a completion
+  path: entering a rep count for an uncompleted set completes it via
+  `withRepCount`. Reps and power are applied together on save, so completing a
+  set through this dialog captures power directly, with no popup chaining. If
+  the dialog is saved with reps unset (set uncompleted), any entered power is
+  discarded — power lives on `RecordedSet`, so power without completion is
+  structurally impossible.
+- The auto-popup (§2) therefore remains wired to the tap path only; both
+  completion paths offer power entry at the moment of completion.
 
 ## 4. Display
 
@@ -101,6 +124,23 @@ distorts total-weight-lifted stats and clutters graphs.
   `lightning-bolt`), mirroring the existing superset toggle, dispatching
   `updateExercise` with `blueprint.with({ trackPower })`. Precedent: the cardio
   editor's `trackDuration`/`trackDistance`/… switches.
+
+### Plan-diff propagation
+
+- `app/src/models/blueprint-diff.ts` maintains an exhaustive per-field diff of
+  weighted-exercise blueprints (`ExerciseFieldChange` union: sets, reps,
+  progressive overload, rest, superset, notes, link), with matching apply
+  logic and i18n labels. It feeds the finish-workout "update your plan?" flow
+  (`getPlanDiff` → diff-save modal): once `WeightedExerciseBlueprint.equals`
+  learns `trackPower`, a mid-session toggle change would make blueprints
+  unequal while producing an **empty** diff — a phantom "changes" prompt whose
+  save applies nothing, so the toggle never reaches the program and every
+  future workout re-prompts.
+- Therefore `trackPower` must be added end-to-end: a new
+  `ExerciseFieldChange` union member (`exerciseTrackPower`), diff detection,
+  apply logic, and i18n diff label — with a test asserting a
+  trackPower-only blueprint change yields a non-empty diff that round-trips
+  through apply.
 
 ## 6. Stats
 
@@ -133,16 +173,24 @@ distorts total-weight-lifted stats and clutters graphs.
 ## 9. Testing
 
 - Model specs (`recorded-weighted-exercise.spec.ts`): power survives rep
-  cycling/editing; JSON round-trip; `equals`; `withPower`; `maxPower`.
-  `__test__/helpers.ts` `filledPotentialSet` learns an optional power arg.
+  cycling/editing; completing an uncompleted set via `withRepCount` can set
+  power in the same operation; JSON round-trip; `equals`; `withPower`;
+  `maxPower`. `__test__/helpers.ts` `filledPotentialSet` learns an optional
+  power arg.
 - Blueprint specs: `trackPower` default, round-trip, equality.
+- Blueprint-diff specs (`blueprint-diff.spec.ts`): a trackPower-only change
+  produces a non-empty diff; applying it writes the toggle to the program
+  blueprint.
 - Stats specs (`calculate-stats.spec.ts`): max-power series across sessions;
   sessions without power skipped.
 - Runner: vitest (`npm test` in app/). Lint/format: oxlint/oxfmt per
   CONTRIBUTING.md.
 - Manual validation: release APK built from the fork branch, sideloaded onto
   the user's Android device, exercising the full flow (toggle → popup → tile →
-  long-press edit → stats graph → history) before the upstream PR opens.
+  long-press edit → completing a set from the long-press rep dialog →
+  plan-diff prompt after a mid-session toggle → stats graph → history) before
+  the upstream PR opens. (The repo has no component-test harness, so dialog
+  behavior is validated here rather than in vitest.)
 
 ## 10. Deliverables & sequencing
 
@@ -158,6 +206,18 @@ distorts total-weight-lifted stats and clutters graphs.
    commit from the branch (rebase it out) — the spec is working material, not
    PR content.
 5. **Private backfill script** (separate from the PR): reads a LiftLog backup
-   export, folds each "X power" exercise's per-set weights into `power` on the
-   matching "X" exercise's sets by date, writes a new backup for re-import.
-   Matching rules designed when we get there.
+   export and folds each "X power" kludge exercise into the real "X" exercise,
+   then removes the kludge entries. Hard requirements, since recorded sessions
+   embed their own blueprint copies and all power UI is gated on
+   `blueprint.trackPower`:
+   - Match kludge → target **within the same session** by exercise name
+     (never by date across sessions); abort with a report on any ambiguity
+     (e.g. duplicate same-named exercises in one session, or set-count
+     mismatch between "X power" and "X").
+   - Write `power` per set positionally (kludge set N's weight-as-watts →
+     target set N) and set `trackPower: true` on the **embedded blueprint** of
+     every rewritten recorded exercise, plus the current program blueprint —
+     otherwise backfilled power is invisible and uneditable.
+   - Never modify the source backup; write a new file, produce a dry-run
+     diff report first, and verify the output re-imports cleanly (and that a
+     re-export round-trips) before pointing the app at it.
