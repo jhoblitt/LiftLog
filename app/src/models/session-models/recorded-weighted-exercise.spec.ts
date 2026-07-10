@@ -330,11 +330,7 @@ describe('RecordedWeightedExercise power operations', () => {
 
   it('maxPower returns the max across sets, or undefined when none recorded', () => {
     expect(makeExercise().maxPower).toBe(312);
-    const noPower = new RecordedWeightedExercise(
-      makeWeightedBlueprint(),
-      [filledPotentialSet(10, tick())],
-      undefined,
-    );
+    const noPower = new RecordedWeightedExercise(makeWeightedBlueprint(), [filledPotentialSet(10, tick())], undefined);
     expect(noPower.maxPower).toBeUndefined();
   });
 
@@ -350,11 +346,7 @@ describe('RecordedWeightedExercise power operations', () => {
     );
     expect(exercise.latestRecordedPower).toBe(312);
     expect(makeExercise().withPower(1, undefined).latestRecordedPower).toBe(250);
-    const noPower = new RecordedWeightedExercise(
-      makeWeightedBlueprint(),
-      [filledPotentialSet(10, tick())],
-      undefined,
-    );
+    const noPower = new RecordedWeightedExercise(makeWeightedBlueprint(), [filledPotentialSet(10, tick())], undefined);
     expect(noPower.latestRecordedPower).toBeUndefined();
   });
 

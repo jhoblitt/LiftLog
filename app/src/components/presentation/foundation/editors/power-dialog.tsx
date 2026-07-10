@@ -36,10 +36,7 @@ export default function PowerDialog(props: PowerDialogProps) {
   return (
     props.open && (
       <Portal>
-        <KeyboardAvoidingView
-          behavior={'height'}
-          style={{ flex: 1, pointerEvents: props.open ? 'box-none' : 'none' }}
-        >
+        <KeyboardAvoidingView behavior={'height'} style={{ flex: 1, pointerEvents: props.open ? 'box-none' : 'none' }}>
           <Dialog visible={props.open} onDismiss={props.onClose}>
             <Dialog.Title>
               <T keyName="exercise.select_power.title" />
