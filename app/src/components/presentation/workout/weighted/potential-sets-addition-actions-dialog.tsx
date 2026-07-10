@@ -36,11 +36,11 @@ export default function PotentialSetAdditionalActionsDialog({
   const parsedPower = Number(powerText);
   const isPowerValid = !powerText || (Number.isInteger(parsedPower) && parsedPower >= 0);
   useEffect(() => {
-    setRepCountText(originalReps?.toString() ?? '');
-  }, [originalReps]);
-  useEffect(() => {
-    setPowerText(originalPower?.toString() ?? '');
-  }, [originalPower]);
+    if (open) {
+      setRepCountText(originalReps?.toString() ?? '');
+      setPowerText(originalPower?.toString() ?? '');
+    }
+  }, [open, originalReps, originalPower]);
 
   const powerValue = () => (powerText && isPowerValid ? parsedPower : undefined);
 
@@ -76,6 +76,7 @@ export default function PotentialSetAdditionalActionsDialog({
                   <IconButton
                     key={i}
                     mode="outlined"
+                    disabled={!isPowerValid}
                     icon={() => <Text>{i}</Text>}
                     onPress={() => {
                       setRepCountText(i.toString());
